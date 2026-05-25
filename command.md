@@ -10,7 +10,7 @@
 
 ### if venv is not getting picked up automatically then execute this command once and then it will activate on that session
 
-### (Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned) ; (& c:\workspace\claudecode\learner\expense-tracker\expense-tracker\venv\Scripts\Activate.ps1)
+### (Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned) ; (& c:\Users\shiva\OneDrive\Documents\Claude\expense-tracker\expense-tracker\venv\Scripts\Activate.ps1)
 
 
 
