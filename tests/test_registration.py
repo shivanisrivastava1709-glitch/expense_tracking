@@ -37,7 +37,7 @@ def test_register_page_loads(client):
 
 
 def test_register_success(client):
-    """Valid POST creates a user, sets session, and redirects to /login (302)."""
+    """Valid POST creates a user, sets session, and redirects to /profile (302)."""
     response = client.post(
         "/register",
         data={
@@ -48,9 +48,9 @@ def test_register_success(client):
         },
         follow_redirects=False,
     )
-    # Should redirect to login, not re-render the form
+    # Session is set at registration → land directly on profile, not login
     assert response.status_code == 302
-    assert "/login" in response.headers["Location"]
+    assert "/profile" in response.headers["Location"]
 
     # User row should exist in the database
     conn = get_db()
