@@ -1,0 +1,246 @@
+/* ------------------------------------------------------------------ */
+/* Profile page — page-specific styles                                  */
+/* Extra palette tokens (scoped to this page)                           */
+/* ------------------------------------------------------------------ */
+
+:root {
+    --profile-blue:        #4a8fd4;
+    --profile-blue-light:  #e8f2fb;
+    --profile-teal:        #2a8f7f;
+    --profile-teal-light:  #e2f5f2;
+    --profile-gold:        #b07d2a;
+    --profile-gold-light:  #fdf5e0;
+}
+
+/* ── Navbar user link ── */
+
+.nav-user {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.nav-user:hover {
+    color: var(--ink);
+}
+
+/* ── Page layout ── */
+
+.profile-section {
+    padding: 2rem 2rem 5rem;
+    background: var(--paper);
+    min-height: calc(100vh - 60px);
+}
+
+.profile-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ── Stats row: 3 equal cards ── */
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.profile-stat-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem 2rem;
+}
+
+.profile-stat-value {
+    font-size: 2.25rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-family: var(--font-body);
+}
+
+/* ── Two-column main grid ── */
+
+.profile-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* ── Generic content card ── */
+
+.profile-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.75rem 2rem;
+}
+
+.profile-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 1.25rem;
+    padding-bottom: 0;
+}
+
+/* ── Transaction table ── */
+
+.txn-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.txn-th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.txn-th-right { text-align: right; }
+
+.txn-row {
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.txn-row:last-child {
+    border-bottom: none;
+}
+
+.txn-date,
+.txn-desc,
+.txn-cat,
+.txn-amount {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+    vertical-align: middle;
+}
+
+.txn-date {
+    color: var(--ink-muted);
+    white-space: nowrap;
+    font-size: 0.8rem;
+}
+
+.txn-amount {
+    text-align: right;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+/* ── Category badges ── */
+
+.cat-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+/* Per-category badge colors */
+.cat-food          { background: var(--accent-2-light);    color: var(--accent-2); }
+.cat-transport     { background: var(--profile-blue-light); color: var(--profile-blue); }
+.cat-bills         { background: var(--profile-teal-light); color: var(--profile-teal); }
+.cat-health        { background: var(--danger-light);       color: var(--danger); }
+.cat-entertainment { background: var(--profile-gold-light); color: var(--profile-gold); }
+.cat-shopping      { background: var(--accent-2-light);    color: var(--accent-2); }
+.cat-other         { background: var(--border-soft);        color: var(--ink-muted); }
+
+/* ── Category breakdown bars ── */
+
+.category-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cat-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.cat-bar-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.cat-bar-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+}
+
+.cat-bar-amount {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    font-weight: 500;
+}
+
+/* Re-declare bar-track: landing.css is not loaded on the profile page */
+.profile-card .bar-track {
+    height: 6px;
+    background: var(--border-soft);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.cat-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+}
+
+/* Per-category bar fill colors */
+.cat-bar-shopping      { background: var(--accent-2); }
+.cat-bar-other         { background: var(--ink-faint); }
+.cat-bar-food          { background: var(--profile-teal); }
+.cat-bar-bills         { background: var(--profile-blue); }
+.cat-bar-health        { background: var(--danger); }
+.cat-bar-entertainment { background: var(--profile-gold); }
+.cat-bar-transport     { background: var(--accent-2-light); border: 1px solid var(--accent-2); }
+
+/* ── Responsive ── */
+
+@media (max-width: 900px) {
+    .profile-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-section {
+        padding: 1.5rem 1rem 4rem;
+    }
+
+    .profile-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-stat-value {
+        font-size: 1.75rem;
+    }
+
+    .txn-date {
+        display: none;
+    }
+}
