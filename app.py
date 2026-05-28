@@ -1,8 +1,12 @@
 import os
+from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from werkzeug.security import check_password_hash
-from database.db import get_db, init_db, seed_db, get_user_by_email, create_user
+from database.db import (
+    get_db, init_db, seed_db, get_user_by_email, create_user,
+    get_user_by_id, get_expenses_by_user, get_expense_stats, get_category_breakdown,
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-spendly-change-in-prod")
@@ -107,35 +111,50 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
+    user_id = session["user_id"]
+
+    # --- AGENT-0: user block ---
+    db_user = get_user_by_id(user_id)
+    if db_user is None:
+        abort(404)
+    member_since = datetime.strptime(db_user["created_at"], "%Y-%m-%d %H:%M:%S").strftime("%d %b %Y")
     user = {
-        "name": "Demo User",
-        "email": "demo@spendly.com",
-        "member_since": "01 Jan 2025",
+        "name": db_user["name"],
+        "email": db_user["email"],
+        "member_since": member_since,
     }
-    stats = {
-        "total_spent": "₹12,450.75",
-        "transaction_count": 8,
-        "top_category": "Food",
-    }
+
+    # --- AGENT-1: transaction history ---
     transactions = [
-        {"date": "12 Apr 2025", "description": "Groceries",            "category": "Food",          "amount": "₹850.00"},
-        {"date": "11 Apr 2025", "description": "Metro card recharge",  "category": "Transport",     "amount": "₹500.00"},
-        {"date": "10 Apr 2025", "description": "Electricity bill",     "category": "Bills",         "amount": "₹2,200.00"},
-        {"date": "09 Apr 2025", "description": "Doctor visit",         "category": "Health",        "amount": "₹800.00"},
-        {"date": "08 Apr 2025", "description": "Netflix subscription", "category": "Entertainment", "amount": "₹649.00"},
-        {"date": "07 Apr 2025", "description": "New shoes",            "category": "Shopping",      "amount": "₹3,200.00"},
-        {"date": "05 Apr 2025", "description": "Dinner with friends",  "category": "Food",          "amount": "₹1,450.00"},
-        {"date": "01 Apr 2025", "description": "Miscellaneous",        "category": "Other",         "amount": "₹2,801.75"},
+        {
+            "date":        datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
+            "description": row["description"] or "",
+            "category":    row["category"],
+            "amount":      f"₹{row['amount']:,.2f}",
+        }
+        for row in get_expenses_by_user(user_id)
     ]
+
+    # --- AGENT-2: summary stats ---
+    raw_stats = get_expense_stats(user_id)
+    stats = {
+        "total_spent":       f"₹{raw_stats['total_spent']:,.2f}",
+        "transaction_count": raw_stats["transaction_count"],
+        "top_category":      raw_stats["top_category"],
+    }
+
+    # --- AGENT-3: category breakdown ---
+    raw_categories = get_category_breakdown(user_id)
+    grand_total = sum(row["total"] for row in raw_categories)
     categories = [
-        {"name": "Shopping",      "amount": "₹3,200.00", "percentage": 26},
-        {"name": "Other",         "amount": "₹2,801.75", "percentage": 22},
-        {"name": "Food",          "amount": "₹2,300.00", "percentage": 18},
-        {"name": "Bills",         "amount": "₹2,200.00", "percentage": 18},
-        {"name": "Health",        "amount": "₹800.00",   "percentage":  6},
-        {"name": "Entertainment", "amount": "₹649.00",   "percentage":  5},
-        {"name": "Transport",     "amount": "₹500.00",   "percentage":  4},
+        {
+            "name":       row["category"],
+            "amount":     f"₹{row['total']:,.2f}",
+            "percentage": round(row["total"] / grand_total * 100) if grand_total else 0,
+        }
+        for row in raw_categories
     ]
+
     return render_template(
         "profile.html",
         user=user,

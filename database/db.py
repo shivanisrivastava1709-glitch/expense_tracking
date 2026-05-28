@@ -98,3 +98,56 @@ def seed_db():
 
     conn.commit()
     conn.close()
+
+
+def get_user_by_id(user_id):
+    conn = get_db()
+    user = conn.execute(
+        "SELECT id, name, email, created_at FROM users WHERE id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return user
+
+
+def get_expenses_by_user(user_id):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT id, amount, category, date, description "
+        "FROM expenses WHERE user_id = ? ORDER BY date DESC",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def get_expense_stats(user_id):
+    conn = get_db()
+    agg = conn.execute(
+        "SELECT SUM(amount) AS total, COUNT(*) AS cnt FROM expenses WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+    top_row = conn.execute(
+        "SELECT category, SUM(amount) AS cat_total "
+        "FROM expenses WHERE user_id = ? "
+        "GROUP BY category ORDER BY cat_total DESC LIMIT 1",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return {
+        "total_spent":       agg["total"] if agg["total"] is not None else 0.0,
+        "transaction_count": agg["cnt"]   if agg["cnt"]   is not None else 0,
+        "top_category":      top_row["category"] if top_row else "—",
+    }
+
+
+def get_category_breakdown(user_id):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT category, SUM(amount) AS total "
+        "FROM expenses WHERE user_id = ? "
+        "GROUP BY category ORDER BY total DESC",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    return rows
