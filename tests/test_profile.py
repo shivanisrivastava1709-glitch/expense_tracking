@@ -1,21 +1,36 @@
 # ------------------------------------------------------------------ #
-# Tests: /profile route (Step 04 — hardcoded UI, no DB queries)       #
+# Tests: /profile route (Step 05 — live DB queries)                   #
 # ------------------------------------------------------------------ #
+
+from database.db import get_db, create_user
 
 
 # ------------------------------------------------------------------ #
 # Helpers                                                             #
 # ------------------------------------------------------------------ #
 
-def set_session(client, user_id=1):
-    """Inject a user_id into the Flask session (no real DB row needed)."""
+def seed_profile_user(app):
+    """Insert a test user + 3 expenses; return the user_id."""
+    with app.app_context():
+        uid = create_user("Test User", "test@spendly.com", "testpass123")
+        conn = get_db()
+        conn.executemany(
+            "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+            [
+                (uid, 850.00,  "Food",      "2026-04-12", "Groceries"),
+                (uid, 500.00,  "Transport", "2026-04-11", "Metro card recharge"),
+                (uid, 2200.00, "Bills",     "2026-04-10", "Electricity bill"),
+            ],
+        )
+        conn.commit()
+        conn.close()
+    return uid
+
+
+def auth_get(client, user_id, path="/profile"):
+    """Inject a real user_id into the session and GET the given path."""
     with client.session_transaction() as sess:
         sess["user_id"] = user_id
-
-
-def auth_get(client, path="/profile"):
-    """Set a fake session and GET the given path."""
-    set_session(client)
     return client.get(path)
 
 
@@ -30,9 +45,10 @@ def test_profile_redirects_unauthenticated(client):
     assert "/login" in response.headers["Location"]
 
 
-def test_profile_loads_for_authenticated_user(client):
+def test_profile_loads_for_authenticated_user(client, app):
     """GET /profile with a valid session must return HTTP 200."""
-    response = auth_get(client)
+    uid = seed_profile_user(app)
+    response = auth_get(client, uid)
     assert response.status_code == 200
 
 
@@ -40,57 +56,74 @@ def test_profile_loads_for_authenticated_user(client):
 # Stats row                                                           #
 # ------------------------------------------------------------------ #
 
-def test_profile_shows_stats(client):
-    """Profile page must display total spent, transaction count, and top category."""
-    response = auth_get(client)
-    assert b"12,450.75" in response.data       # total_spent
-    assert b"Food" in response.data            # top_category
-    # transaction_count (8) is embedded in other content too; check the page renders
-    assert b"8" in response.data
+def test_profile_shows_stats(client, app):
+    """Profile page must display live total spent, transaction count, and top category."""
+    uid = seed_profile_user(app)
+    response = auth_get(client, uid)
+    assert response.status_code == 200
+    assert b"3,550.00" in response.data    # 850 + 500 + 2200
+    assert b"Bills" in response.data       # top category by sum
+    assert b"3" in response.data           # transaction_count
 
 
 # ------------------------------------------------------------------ #
 # Transaction table                                                   #
 # ------------------------------------------------------------------ #
 
-def test_profile_shows_transactions(client):
-    """Profile page must display the hardcoded transaction rows."""
-    response = auth_get(client)
+def test_profile_shows_transactions(client, app):
+    """Profile page must display the seeded transaction rows from the DB."""
+    uid = seed_profile_user(app)
+    response = auth_get(client, uid)
     assert b"Groceries" in response.data
     assert b"Metro card recharge" in response.data
     assert b"Electricity bill" in response.data
-    assert b"Entertainment" in response.data
-    assert b"New shoes" in response.data
-    assert b"2,801.75" in response.data        # Miscellaneous row
 
 
 # ------------------------------------------------------------------ #
 # Category breakdown                                                  #
 # ------------------------------------------------------------------ #
 
-def test_profile_shows_category_breakdown(client):
-    """Profile page must display category breakdown rows."""
-    response = auth_get(client)
-    assert b"Shopping" in response.data
+def test_profile_shows_category_breakdown(client, app):
+    """Profile page must display category breakdown rows from the DB."""
+    uid = seed_profile_user(app)
+    response = auth_get(client, uid)
+    assert b"Bills" in response.data
+    assert b"Food" in response.data
     assert b"Transport" in response.data
-    assert b"Health" in response.data
     assert b"By Category" in response.data
+
+
+# ------------------------------------------------------------------ #
+# Zero-expenses edge case                                             #
+# ------------------------------------------------------------------ #
+
+def test_profile_zero_expenses(client, app):
+    """A user with no expenses must see ₹0.00, 0 transactions, and — for top category."""
+    with app.app_context():
+        uid = create_user("Empty User", "empty@spendly.com", "testpass123")
+    with client.session_transaction() as sess:
+        sess["user_id"] = uid
+    response = client.get("/profile")
+    assert response.status_code == 200
+    assert b"0.00" in response.data
+    assert "—".encode() in response.data
 
 
 # ------------------------------------------------------------------ #
 # Navbar — conditional auth state                                     #
 # ------------------------------------------------------------------ #
 
-def test_navbar_shows_signout_when_authenticated(client):
+def test_navbar_shows_signout_when_authenticated(client, app):
     """Navbar must show 'Sign out' and hide 'Sign in' for authenticated users."""
-    response = auth_get(client)
+    uid = seed_profile_user(app)
+    response = auth_get(client, uid)
     assert b"Sign out" in response.data
     assert b"Sign in" not in response.data
 
 
 def test_navbar_shows_signin_when_unauthenticated(client):
     """Navbar must show 'Sign in' and 'Get started' for guests on any page."""
-    response = client.get("/")           # landing page, no session set
+    response = client.get("/")
     assert b"Sign in" in response.data
     assert b"Get started" in response.data
     assert b"Sign out" not in response.data
@@ -100,8 +133,9 @@ def test_navbar_shows_signin_when_unauthenticated(client):
 # Section headings present                                            #
 # ------------------------------------------------------------------ #
 
-def test_profile_shows_section_headings(client):
+def test_profile_shows_section_headings(client, app):
     """Profile page must render both section headings."""
-    response = auth_get(client)
+    uid = seed_profile_user(app)
+    response = auth_get(client, uid)
     assert b"Recent Transactions" in response.data
     assert b"By Category" in response.data
