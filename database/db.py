@@ -110,28 +110,40 @@ def get_user_by_id(user_id):
     return user
 
 
-def get_expenses_by_user(user_id):
+def _date_clause(date_from, date_to):
+    if date_from and date_to:
+        return " AND date BETWEEN ? AND ?", (date_from, date_to)
+    return "", ()
+
+
+def get_expenses_by_user(user_id, date_from=None, date_to=None):
+    extra_sql, extra_params = _date_clause(date_from, date_to)
     conn = get_db()
     rows = conn.execute(
         "SELECT id, amount, category, date, description "
-        "FROM expenses WHERE user_id = ? ORDER BY date DESC",
-        (user_id,),
+        "FROM expenses WHERE user_id = ?"
+        + extra_sql +
+        " ORDER BY date DESC",
+        (user_id,) + extra_params,
     ).fetchall()
     conn.close()
     return rows
 
 
-def get_expense_stats(user_id):
+def get_expense_stats(user_id, date_from=None, date_to=None):
+    extra_sql, extra_params = _date_clause(date_from, date_to)
     conn = get_db()
     agg = conn.execute(
-        "SELECT SUM(amount) AS total, COUNT(*) AS cnt FROM expenses WHERE user_id = ?",
-        (user_id,),
+        "SELECT SUM(amount) AS total, COUNT(*) AS cnt FROM expenses WHERE user_id = ?"
+        + extra_sql,
+        (user_id,) + extra_params,
     ).fetchone()
     top_row = conn.execute(
         "SELECT category, SUM(amount) AS cat_total "
-        "FROM expenses WHERE user_id = ? "
-        "GROUP BY category ORDER BY cat_total DESC LIMIT 1",
-        (user_id,),
+        "FROM expenses WHERE user_id = ?"
+        + extra_sql +
+        " GROUP BY category ORDER BY cat_total DESC LIMIT 1",
+        (user_id,) + extra_params,
     ).fetchone()
     conn.close()
     return {
@@ -141,13 +153,15 @@ def get_expense_stats(user_id):
     }
 
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, date_from=None, date_to=None):
+    extra_sql, extra_params = _date_clause(date_from, date_to)
     conn = get_db()
     rows = conn.execute(
         "SELECT category, SUM(amount) AS total "
-        "FROM expenses WHERE user_id = ? "
-        "GROUP BY category ORDER BY total DESC",
-        (user_id,),
+        "FROM expenses WHERE user_id = ?"
+        + extra_sql +
+        " GROUP BY category ORDER BY total DESC",
+        (user_id,) + extra_params,
     ).fetchall()
     conn.close()
     return rows
