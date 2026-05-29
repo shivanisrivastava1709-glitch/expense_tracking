@@ -1,7 +1,7 @@
 import os
-from datetime import datetime
+from datetime import datetime, date
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort
+from flask import Flask, render_template, request, redirect, url_for, session, abort, flash
 from werkzeug.security import check_password_hash
 from database.db import (
     get_db, init_db, seed_db, get_user_by_email, create_user,
@@ -106,6 +106,26 @@ def logout():
     return redirect(url_for("login"))
 
 
+def _parse_date(value):
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _months_ago(today, n):
+    m, y = today.month - n, today.year
+    if m <= 0:
+        m += 12
+        y -= 1
+    try:
+        return date(y, m, today.day)
+    except ValueError:
+        return date(y, m, 1)
+
+
 @app.route("/profile")
 def profile():
     if not session.get("user_id"):
@@ -113,7 +133,43 @@ def profile():
 
     user_id = session["user_id"]
 
-    # --- AGENT-0: user block ---
+    # --- Parse and validate date filter params ---
+    date_from = _parse_date(request.args.get("date_from", ""))
+    date_to   = _parse_date(request.args.get("date_to",   ""))
+    if date_from and date_to and date_from > date_to:
+        flash("Start date must be before end date.")
+        date_from = date_to = None
+    df_str = date_from.strftime("%Y-%m-%d") if date_from else None
+    dt_str = date_to.strftime("%Y-%m-%d")   if date_to   else None
+
+    # --- Preset date ranges ---
+    today = date.today()
+    preset_this_month = {
+        "date_from": today.replace(day=1).strftime("%Y-%m-%d"),
+        "date_to":   today.strftime("%Y-%m-%d"),
+    }
+    preset_last_3 = {
+        "date_from": _months_ago(today, 3).strftime("%Y-%m-%d"),
+        "date_to":   today.strftime("%Y-%m-%d"),
+    }
+    preset_last_6 = {
+        "date_from": _months_ago(today, 6).strftime("%Y-%m-%d"),
+        "date_to":   today.strftime("%Y-%m-%d"),
+    }
+
+    # --- Determine active filter token ---
+    if df_str is None and dt_str is None:
+        active_filter = "all"
+    elif df_str == preset_this_month["date_from"] and dt_str == preset_this_month["date_to"]:
+        active_filter = "this_month"
+    elif df_str == preset_last_3["date_from"] and dt_str == preset_last_3["date_to"]:
+        active_filter = "last_3"
+    elif df_str == preset_last_6["date_from"] and dt_str == preset_last_6["date_to"]:
+        active_filter = "last_6"
+    else:
+        active_filter = "custom"
+
+    # --- User block ---
     db_user = get_user_by_id(user_id)
     if db_user is None:
         abort(404)
@@ -124,7 +180,7 @@ def profile():
         "member_since": member_since,
     }
 
-    # --- AGENT-1: transaction history ---
+    # --- Transaction history ---
     transactions = [
         {
             "date":        datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
@@ -132,19 +188,19 @@ def profile():
             "category":    row["category"],
             "amount":      f"₹{row['amount']:,.2f}",
         }
-        for row in get_expenses_by_user(user_id)
+        for row in get_expenses_by_user(user_id, date_from=df_str, date_to=dt_str)
     ]
 
-    # --- AGENT-2: summary stats ---
-    raw_stats = get_expense_stats(user_id)
+    # --- Summary stats ---
+    raw_stats = get_expense_stats(user_id, date_from=df_str, date_to=dt_str)
     stats = {
         "total_spent":       f"₹{raw_stats['total_spent']:,.2f}",
         "transaction_count": raw_stats["transaction_count"],
         "top_category":      raw_stats["top_category"],
     }
 
-    # --- AGENT-3: category breakdown ---
-    raw_categories = get_category_breakdown(user_id)
+    # --- Category breakdown ---
+    raw_categories = get_category_breakdown(user_id, date_from=df_str, date_to=dt_str)
     grand_total = sum(row["total"] for row in raw_categories)
     categories = [
         {
@@ -161,6 +217,12 @@ def profile():
         stats=stats,
         transactions=transactions,
         categories=categories,
+        active_filter=active_filter,
+        date_from=df_str or "",
+        date_to=dt_str or "",
+        preset_this_month=preset_this_month,
+        preset_last_3=preset_last_3,
+        preset_last_6=preset_last_6,
     )
 
 

@@ -219,6 +219,110 @@
 .cat-bar-entertainment { background: var(--profile-gold); }
 .cat-bar-transport     { background: var(--accent-2-light); border: 1px solid var(--accent-2); }
 
+/* ── Filter bar ── */
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.filter-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.filter-preset {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    background: transparent;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    text-decoration: none;
+}
+
+.filter-preset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filter-preset--active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper-card);
+}
+
+.filter-preset--active:hover {
+    background: var(--accent);
+    color: var(--paper-card);
+}
+
+.filter-custom {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-date-input {
+    padding: 0.28rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--ink);
+    background: var(--paper);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.filter-date-input:focus {
+    border-color: var(--accent);
+}
+
+.filter-date-sep {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+}
+
+.filter-apply-btn {
+    padding: 0.28rem 0.85rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.filter-apply-btn:hover {
+    background: var(--accent);
+}
+
+/* ── Empty-state cell ── */
+
+.txn-empty-cell {
+    padding: 2rem 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--ink-faint);
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 900px) {
@@ -242,5 +346,19 @@
 
     .txn-date {
         display: none;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-custom {
+        width: 100%;
+    }
+
+    .filter-date-input {
+        flex: 1;
+        min-width: 0;
     }
 }
