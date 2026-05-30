@@ -1,0 +1,23 @@
+/* ------------------------------------------------------------------ */
+/* Add Expense — page-specific form controls                           */
+/* ------------------------------------------------------------------ */
+
+.form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.form-textarea {
+    min-height: 4.5rem;
+    resize: vertical;
+    line-height: 1.5;
+    font-family: var(--font-body);
+}
+
+.form-optional {
+    color: var(--ink-faint);
+    font-weight: 400;
+}

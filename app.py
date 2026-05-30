@@ -6,10 +6,13 @@ from werkzeug.security import check_password_hash
 from database.db import (
     get_db, init_db, seed_db, get_user_by_email, create_user,
     get_user_by_id, get_expenses_by_user, get_expense_stats, get_category_breakdown,
+    create_expense,
 )
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-spendly-change-in-prod")
+
+CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
 
 
 # ------------------------------------------------------------------ #
@@ -137,7 +140,7 @@ def profile():
     date_from = _parse_date(request.args.get("date_from", ""))
     date_to   = _parse_date(request.args.get("date_to",   ""))
     if date_from and date_to and date_from > date_to:
-        flash("Start date must be before end date.")
+        flash("Start date must be before end date.", "error")
         date_from = date_to = None
     df_str = date_from.strftime("%Y-%m-%d") if date_from else None
     dt_str = date_to.strftime("%Y-%m-%d")   if date_to   else None
@@ -233,9 +236,43 @@ def analytics():
     return render_template("analytics.html")
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    user_id = session["user_id"]
+    today = date.today().strftime("%Y-%m-%d")
+
+    if request.method == "GET":
+        return render_template("add_expense.html", categories=CATEGORIES, today=today)
+
+    # POST: read and strip submitted values
+    amount_raw  = request.form.get("amount",      "").strip()
+    category    = request.form.get("category",    "").strip()
+    date_raw    = request.form.get("date",        "").strip()
+    description = request.form.get("description", "").strip()
+
+    def _reshow(error):
+        return render_template("add_expense.html", categories=CATEGORIES, today=today,
+                               error=error, amount=amount_raw, category=category,
+                               date=date_raw, description=description)
+
+    try:
+        amount = float(amount_raw)
+    except ValueError:
+        return _reshow("Amount must be a number.")
+    if amount <= 0:
+        return _reshow("Amount must be greater than zero.")
+    if category not in CATEGORIES:
+        return _reshow("Please choose a valid category.")
+    parsed = _parse_date(date_raw)
+    if parsed is None:
+        return _reshow("Please enter a valid date.")
+
+    create_expense(user_id, round(amount, 2), category,
+                   parsed.strftime("%Y-%m-%d"), description or None)
+    flash("Expense added.", "success")
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/edit")
