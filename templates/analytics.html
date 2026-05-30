@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Spendly{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="analytics-coming">
+    <div class="coming-inner">
+        <div class="coming-copy">
+            <span class="hero-badge">Coming Soon</span>
+            <h1 class="coming-title">Analytics, <em>reimagined</em></h1>
+            <p class="coming-subtitle">
+                Spending trends, category breakdowns, and month-over-month insights —
+                all in one calm, focused view. We're putting the finishing touches on it.
+            </p>
+            <div class="coming-actions">
+                <a href="{{ url_for('profile') }}" class="btn-primary">Back to dashboard</a>
+                <a href="{{ url_for('landing') }}" class="btn-ghost">Learn more</a>
+            </div>
+            <p class="coming-note">⚡ We'll let you know the moment it's ready.</p>
+        </div>
+
+        <div class="coming-visual">
+            <div class="preview-card">
+                <div class="preview-header">
+                    <span class="preview-label">Spending Overview</span>
+                    <span class="preview-pill">Preview</span>
+                </div>
+
+                <div class="preview-chart">
+                    <div class="bar-col"><span class="bar" style="height: 38%;"></span></div>
+                    <div class="bar-col"><span class="bar" style="height: 56%;"></span></div>
+                    <div class="bar-col"><span class="bar" style="height: 44%;"></span></div>
+                    <div class="bar-col"><span class="bar is-peak" style="height: 82%;"></span></div>
+                    <div class="bar-col"><span class="bar" style="height: 61%;"></span></div>
+                    <div class="bar-col"><span class="bar" style="height: 50%;"></span></div>
+                </div>
+
+                <div class="preview-legend">
+                    <span>Jan</span><span>Feb</span><span>Mar</span>
+                    <span>Apr</span><span>May</span><span>Jun</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
