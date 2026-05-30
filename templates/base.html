@@ -20,6 +20,8 @@
             </a>
             <div class="nav-links">
                 {% if session.get("user_id") %}
+                    <a href="{{ url_for('analytics') }}"
+                       class="{% if request.endpoint == 'analytics' %}active{% endif %}">Analytics</a>
                     <a href="{{ url_for('profile') }}" class="nav-user">Demo User</a>
                     <a href="{{ url_for('logout') }}" class="nav-cta">Sign out</a>
                 {% else %}
@@ -30,10 +32,10 @@
         </div>
     </nav>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div class="flash-bar">
-          {% for msg in messages %}<p class="flash-msg flash-error">{{ msg }}</p>{% endfor %}
+          {% for category, msg in messages %}<p class="flash-msg flash-{{ category }}">{{ msg }}</p>{% endfor %}
         </div>
       {% endif %}
     {% endwith %}

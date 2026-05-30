@@ -25,6 +25,21 @@
     color: var(--ink);
 }
 
+/* ── Page header ── */
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.profile-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    color: var(--ink);
+}
+
 /* ── Page layout ── */
 
 .profile-section {
