@@ -32,10 +32,10 @@
         </div>
     </nav>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div class="flash-bar">
-          {% for msg in messages %}<p class="flash-msg flash-error">{{ msg }}</p>{% endfor %}
+          {% for category, msg in messages %}<p class="flash-msg flash-{{ category }}">{{ msg }}</p>{% endfor %}
         </div>
       {% endif %}
     {% endwith %}
