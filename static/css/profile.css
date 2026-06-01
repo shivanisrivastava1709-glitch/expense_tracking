@@ -137,7 +137,8 @@
 .txn-date,
 .txn-desc,
 .txn-cat,
-.txn-amount {
+.txn-amount,
+.txn-actions {
     padding: 0.75rem 0.5rem;
     font-size: 0.875rem;
     color: var(--ink-soft);
@@ -155,6 +156,22 @@
     font-weight: 500;
     color: var(--ink);
     white-space: nowrap;
+}
+
+.txn-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.txn-edit {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.txn-edit:hover {
+    text-decoration: underline;
 }
 
 /* ── Category badges ── */
