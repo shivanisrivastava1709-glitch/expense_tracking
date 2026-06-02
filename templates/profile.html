@@ -62,6 +62,7 @@
                             <th class="txn-th">Description</th>
                             <th class="txn-th">Category</th>
                             <th class="txn-th txn-th-right">Amount</th>
+                            <th class="txn-th"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,11 +77,14 @@
                                     </span>
                                 </td>
                                 <td class="txn-amount">{{ txn.amount }}</td>
+                                <td class="txn-actions">
+                                    <a href="{{ url_for('edit_expense', id=txn.id) }}" class="txn-edit">Edit</a>
+                                </td>
                             </tr>
                             {% endfor %}
                         {% else %}
                         <tr class="txn-row">
-                            <td colspan="4" class="txn-empty-cell">No transactions found for this period.</td>
+                            <td colspan="5" class="txn-empty-cell">No transactions found for this period.</td>
                         </tr>
                         {% endif %}
                     </tbody>
