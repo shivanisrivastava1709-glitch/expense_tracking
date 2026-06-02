@@ -70,6 +70,16 @@ def update_expense(expense_id, amount, category, date, description):
     conn.close()
 
 
+def remove_expense(expense_id):
+    conn = get_db()
+    conn.execute(
+        "DELETE FROM expenses WHERE id = ?",
+        (expense_id,),
+    )
+    conn.commit()
+    conn.close()
+
+
 def init_db():
     conn = get_db()
     conn.execute("""
