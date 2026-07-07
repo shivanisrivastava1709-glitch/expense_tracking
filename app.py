@@ -12,6 +12,14 @@ from database.db import (
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-spendly-change-in-prod")
 
+# Initialise the database on startup so it works under any WSGI server
+# (e.g. gunicorn in production), not just the local __main__ block below.
+# Both helpers are idempotent: init_db() uses CREATE TABLE IF NOT EXISTS and
+# seed_db() skips when users already exist.
+with app.app_context():
+    init_db()
+    seed_db()
+
 CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
 
 
@@ -335,7 +343,4 @@ def delete_expense(id):
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        init_db()
-        seed_db()
     app.run(debug=True, port=5001)
